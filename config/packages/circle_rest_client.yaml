@@ -1,0 +1,4 @@
+circle_rest_client:
+    curl:
+      defaults:
+        CURLOPT_FOLLOWLOCATION: true
