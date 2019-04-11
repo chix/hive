@@ -5,6 +5,8 @@
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     locale: 'en'
+    expo.notifications.backendUrl: https://exp.host/--/api/v2/push/send
+    expo.notifications.receiptsBackendUrl: https://exp.host/--/api/v2/push/getReceipts
 
 services:
     # default configuration for services in *this* file
@@ -16,7 +18,7 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/*'
-        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+        exclude: '../src/{DependencyInjection,Entity,Migrations,Resources,Tests,Kernel.php}'
 
     # controllers are imported separately to make sure services can be injected
     # as action arguments even if you don't extend any base controller class
@@ -26,3 +28,14 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Command\PushNotificationsReceiptsCommand:
+        arguments:
+            $restClient: '@circle.restclient'
+            $logger: '@monolog.logger.notifications'
+            $expoBackendUrl: '%expo.notifications.receiptsBackendUrl%'
+    App\Command\PushNotificationsTestCommand:
+        arguments:
+            $restClient: '@circle.restclient'
+            $logger: '@monolog.logger.notifications'
+            $expoBackendUrl: '%expo.notifications.backendUrl%'

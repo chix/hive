@@ -20,6 +20,7 @@ fos_rest:
         view_response_listener: 'force'
     exception:
         enabled: true
+        exception_controller: 'fos_rest.exception.controller:showAction'
     allowed_methods_listener: true
     routing_loader:
         default_format: json
