@@ -11,6 +11,7 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
 /**
  * @method Hive|null find($id, $lockMode = null, $lockVersion = null)
  * @method Hive|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Hive|null findOneByCode(string $code, array $orderBy = null)
  * @method Hive[]    findAll()
  * @method Hive[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */

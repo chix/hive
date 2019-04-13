@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Form\HiveDataDto;
 use App\Form\PushNotificationTokenData;
 use App\Form\PushNotificationTokenType;
 use App\Repository\HiveRepository;
@@ -13,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations;
 use FOS\RestBundle\Controller\FOSRestController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @Annotations\Prefix("/api")
@@ -69,6 +71,30 @@ final class ApiController extends FOSRestController
             return $this->createNotFoundException();
         }
         return $hive;
+    }
+
+    /**
+     * @Annotations\Post("/data")
+     */
+    public function postHiveDataActions(
+        EntityManagerInterface $entityManager,
+        Request $request,
+        HiveDataDto $dto
+    ) {
+        $json = json_decode((string)$request->getContent(), true);
+
+        if ($json !== null) {
+            $entities = $dto->createEntities($json);
+
+            foreach ($entities as $entity) {
+                $entityManager->persist($entity);
+            }
+            if (!empty($entities)) {
+                $entityManager->flush();
+            }
+        }
+
+        return new Response();
     }
 
     /**
