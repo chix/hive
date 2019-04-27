@@ -98,25 +98,45 @@ final class ApiController extends FOSRestController
     }
 
     /**
-     * @Annotations\Get("/charts")
+     * @Annotations\Get("/charts/hourly/{type}/{hours}",
+     *   requirements={"type": "area|bar|line", "hours": "\d{1,2}"},
+     *   defaults={"type": "line", "hours": 24}
+     * )
      */
-    public function getChartsAction(HiveRepository $hiveRepository, HiveDataRepository $dataRepository)
+    public function getHourlyChartsAction(HiveRepository $hiveRepository, HiveDataRepository $dataRepository, $type, $hours)
     {
         $charts = [];
         $hives = $hiveRepository->findBy([], ['id' => 'ASC']);
         foreach ($hives as $hive) {
-            $hiveData = $dataRepository->getForHive($hive->getId());
-            $chartData = [];
-            foreach ($hiveData as $data) {
-                $chartData[] = [
-                    'x' => $data->getCreatedAt()->getTimestamp(),
-                    'y' => $data->getWeight(),
-                ];
-            }
+            $chartData = $dataRepository->getForHivePerHour($hive->getId(), (int)$hours);
             $chart = [];
             $chart['id'] = $hive->getId();
             $chart['name'] = $hive->getName();
-            $chart['type'] = 'line';
+            $chart['type'] = $type;
+            $chart['mode'] = 'hourly';
+            $chart['data'] = $chartData;
+            $charts[] = $chart;
+        }
+        return $charts;
+    }
+
+    /**
+     * @Annotations\Get("/charts/daily/{type}/{days}",
+     *   requirements={"type": "area|bar|line", "hours": "\d{1,2}"},
+     *   defaults={"type": "line", "days": 20}
+     * )
+     */
+    public function getDailyChartsAction(HiveRepository $hiveRepository, HiveDataRepository $dataRepository, $type, $days)
+    {
+        $charts = [];
+        $hives = $hiveRepository->findBy([], ['id' => 'ASC']);
+        foreach ($hives as $hive) {
+            $chartData = $dataRepository->getForHivePerDay($hive->getId(), (int)$days);
+            $chart = [];
+            $chart['id'] = $hive->getId();
+            $chart['name'] = $hive->getName();
+            $chart['type'] = $type;
+            $chart['mode'] = 'daily';
             $chart['data'] = $chartData;
             $charts[] = $chart;
         }
