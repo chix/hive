@@ -21,7 +21,7 @@ final class HiveDataRepository extends ServiceEntityRepository
         parent::__construct($registry, HiveData::class);
     }
 
-    public function getForHivePerHour(int $hiveId, int $hours = 24): array
+    public function getForHivePerHour(int $hiveId, int $hours = 24, bool $zoroMissingSlots = true): array
     {
         $daysAgo = new \DateTime();
         $daysAgo->modify('-'.$hours.' hour');
@@ -45,10 +45,21 @@ final class HiveDataRepository extends ServiceEntityRepository
             ];
         }
 
+        // inject 0 values into missing slots
+        if ($zoroMissingSlots) {
+            $startTimestamp = $createdAt->setTime((int)$createdAt->format('H'), 0, 0, 0)->getTimestamp();
+            $endTimestamp = (new \DateTime())->setTime((int)$createdAt->format('H'), 0, 0, 0)->getTimestamp();
+            for ($timestamp = $startTimestamp; $timestamp <= $endTimestamp; $timestamp += 3600) {
+                if (!isset($chartData[$timestamp])) {
+                    $chartData[$timestamp] = ['x' => $timestamp, 'y' => 0];
+                }
+            }
+        }
+
         return array_values($chartData);
     }
 
-    public function getForHivePerDay(int $hiveId, int $days = 10): array
+    public function getForHivePerDay(int $hiveId, int $days = 10, bool $zoroMissingSlots = true): array
     {
         $daysAgo = new \DateTime();
         $daysAgo->modify('-'.$days.' day');
@@ -84,6 +95,21 @@ final class HiveDataRepository extends ServiceEntityRepository
                 'x' => $timestamp,
                 'y' => (int)$data['weight'],
             ];
+        }
+
+        // inject 0 values into missing slots
+        if ($zoroMissingSlots) {
+            $startTimestamp = $createdAt->setTime(0, 0, 0, 0)->getTimestamp();
+            $endTimestamp = (new \DateTime())->setTime(0, 0, 0, 0)->getTimestamp();
+            $timestamp = $startTimestamp;
+            while ($timestamp <= $endTimestamp) {
+                if (!isset($chartData[$timestamp])) {
+                    $chartData[$timestamp] = ['x' => $timestamp, 'y' => 0];
+                }
+                $nextDay = new \DateTime('@'.$timestamp);
+                $nextDay->modify('+1 day');
+                $timestamp = $nextDay->setTime(0, 0, 0, 0)->getTimestamp();
+            }
         }
 
         return array_values($chartData);
