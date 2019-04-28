@@ -47,8 +47,9 @@ final class HiveDataRepository extends ServiceEntityRepository
 
         // inject 0 values into missing slots
         if ($zoroMissingSlots) {
-            $startTimestamp = $createdAt->setTime((int)$createdAt->format('H'), 0, 0, 0)->getTimestamp();
-            $endTimestamp = (new \DateTime())->setTime((int)$createdAt->format('H'), 0, 0, 0)->getTimestamp();
+            $startTimestamp = $daysAgo->setTime((int)$daysAgo->format('H'), 0, 0, 0)->getTimestamp();
+            $now = new \DateTime();
+            $endTimestamp = $now->setTime((int)$now->format('H'), 0, 0, 0)->getTimestamp();
             for ($timestamp = $startTimestamp; $timestamp <= $endTimestamp; $timestamp += 3600) {
                 if (!isset($chartData[$timestamp])) {
                     $chartData[$timestamp] = ['x' => $timestamp, 'y' => 0];
@@ -99,7 +100,7 @@ final class HiveDataRepository extends ServiceEntityRepository
 
         // inject 0 values into missing slots
         if ($zoroMissingSlots) {
-            $startTimestamp = $createdAt->setTime(0, 0, 0, 0)->getTimestamp();
+            $startTimestamp = $daysAgo->setTime(0, 0, 0, 0)->getTimestamp();
             $endTimestamp = (new \DateTime())->setTime(0, 0, 0, 0)->getTimestamp();
             $timestamp = $startTimestamp;
             while ($timestamp <= $endTimestamp) {
@@ -107,6 +108,7 @@ final class HiveDataRepository extends ServiceEntityRepository
                     $chartData[$timestamp] = ['x' => $timestamp, 'y' => 0];
                 }
                 $nextDay = new \DateTime('@'.$timestamp);
+                $nextDay->setTimezone(new \DateTimeZone(date_default_timezone_get()));
                 $nextDay->modify('+1 day');
                 $timestamp = $nextDay->setTime(0, 0, 0, 0)->getTimestamp();
             }
