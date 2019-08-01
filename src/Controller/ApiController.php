@@ -76,17 +76,24 @@ final class ApiController extends AbstractFOSRestController
     }
 
     /**
-     * @Annotations\Post("/data")
+     * @Annotations\Post("/nodes/{code}/data", requirements={"id"="[a-zA-Z0-9]+"})
      */
     public function postHiveDataActions(
         EntityManagerInterface $entityManager,
+        MasterNodeRepository $masterNodeRepository,
         Request $request,
-        HiveDataDto $dto
+        HiveDataDto $dto,
+        string $code
     ) {
+        $masterNode = $masterNodeRepository->findOneByCode($code);
+        if ($masterNode === null) {
+            return $this->createNotFoundException();
+        }
+
         $json = json_decode((string)$request->getContent(), true);
 
         if ($json !== null) {
-            $entities = $dto->createEntities($json);
+            $entities = $dto->createEntities($masterNode, $json);
 
             foreach ($entities as $entity) {
                 $entityManager->persist($entity);
