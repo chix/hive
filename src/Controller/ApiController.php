@@ -12,7 +12,7 @@ use App\Repository\HiveDataRepository;
 use App\Repository\MasterNodeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations;
-use FOS\RestBundle\Controller\FOSRestController;
+use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Service\PushNotificationsService;
@@ -21,7 +21,7 @@ use App\Repository\PushNotificationTokenRepository;
 /**
  * @Annotations\Prefix("/api")
  */
-final class ApiController extends FOSRestController
+final class ApiController extends AbstractFOSRestController
 {
     /**
      * @Annotations\Get("/nodes")
