@@ -11,6 +11,7 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
 /**
  * @method MasterNode|null find($id, $lockMode = null, $lockVersion = null)
  * @method MasterNode|null findOneBy(array $criteria, array $orderBy = null)
+ * @method MasterNode|null findOneByCode(string $code, array $orderBy = null)
  * @method MasterNode[]    findAll()
  * @method MasterNode[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */

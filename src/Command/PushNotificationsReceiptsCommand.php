@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use Circle\RestClientBundle\Services\RestClient;
-use Circle\RestClientBundle\Exceptions\CurlException;
+use App\Service\PushNotificationsService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 final class PushNotificationsReceiptsCommand extends Command
 {
@@ -25,20 +21,21 @@ final class PushNotificationsReceiptsCommand extends Command
     protected $logger;
 
     /**
-     * @var RestClient
+     * @var PushNotificationsService
      */
-    protected $restClient;
+    private $pushNotificationsService;
 
     /**
      * @var string
      */
     protected $expoBackendUrl;
 
-    public function __construct(RestClient $restClient, LoggerInterface $logger, string $expoBackendUrl)
-    {
-        $this->restClient = $restClient;
+    public function __construct(
+        PushNotificationsService $pushNotificationsService,
+        LoggerInterface $logger
+    ) {
+        $this->pushNotificationsService = $pushNotificationsService;
         $this->logger = $logger;
-        $this->expoBackendUrl = $expoBackendUrl;
 
         parent::__construct();
     }
@@ -53,30 +50,15 @@ final class PushNotificationsReceiptsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): ?int
     {
-        $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-
         $id = $input->getArgument('id');
-
-        $message = new \stdClass();
-        $message->ids = [$id];
-        $json = (string)$serializer->encode($message, 'json');
+        if (!is_string($id)) {
+            $output->writeln('<error>id argument has to be string.</error>');
+            return 0;
+        }
 
         try {
-            $curlOptions = [
-                CURLOPT_HTTPHEADER => [
-                    'Accept: application/json',
-                    'Content-Type: application/json',
-                    'Accept-Encoding: gzip, deflate',
-                ],
-            ];
-            $response = $this->restClient->post($this->expoBackendUrl, $json, $curlOptions);
-            $response->getContent();
-            if ($response->getStatusCode() >= 400) {
-                $output->writeln(sprintf('<error>%s</error>', $response->getContent()));
-            } else {
-                $output->writeln($response->getContent());
-            }
-        } catch (CurlException $e) {
+            $this->pushNotificationsService->getReceipt($id);
+        } catch (\Exception $e) {
             $output->writeln(sprintf('<error>%s</error>', $e->getMessage()));
         }
 

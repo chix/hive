@@ -40,8 +40,6 @@ class MasterNode extends BaseEntity
 
     /**
      * @ORM\Column(name="code", type="string", length=255, unique=true)
-     *
-     * @Serializer\Expose
      */
     private $code;
 

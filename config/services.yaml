@@ -31,10 +31,11 @@ services:
 
     App\Command\PushNotificationsReceiptsCommand:
         arguments:
-            $restClient: '@circle.restclient'
             $logger: '@monolog.logger.notifications'
-            $expoBackendUrl: '%expo.notifications.receiptsBackendUrl%'
     App\Command\PushNotificationsTestCommand:
+        arguments:
+            $logger: '@monolog.logger.notifications'
+    App\Service\PushNotificationsService:
         arguments:
             $restClient: '@circle.restclient'
             $logger: '@monolog.logger.notifications'

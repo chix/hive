@@ -15,6 +15,8 @@ use FOS\RestBundle\Controller\Annotations;
 use FOS\RestBundle\Controller\FOSRestController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Service\PushNotificationsService;
+use App\Repository\PushNotificationTokenRepository;
 
 /**
  * @Annotations\Prefix("/api")
@@ -163,5 +165,43 @@ final class ApiController extends FOSRestController
         }
 
         return $form;
+    }
+
+    /**
+     * @Annotations\Post("/nodes/{code}/setup-notification", requirements={"id"="[a-zA-Z0-9]+"})
+     */
+    public function postMasterNodeSetupSuccessfulAction(
+        MasterNodeRepository $masterNodeRepository,
+        PushNotificationTokenRepository $pushNotificationTokenRepository,
+        PushNotificationsService $pushNotificationsService,
+        Request $request,
+        string $code
+    ) {
+        $masterNode = $masterNodeRepository->findOneByCode($code);
+        if ($masterNode === null) {
+            return $this->createNotFoundException();
+        }
+        $json = json_decode((string)$request->getContent(), true);
+        if ($json === null) {
+            return $this->createNotFoundException();
+        }
+
+        $hiveStatuses = [];
+        foreach ($masterNode->getHives() as $hive) {
+            $status = (!empty($json[$hive->getCode()])) ? 'on' : 'off';
+            $hiveStatuses[] = sprintf('%s: %s', $hive->getName(), $status);
+        }
+        $notification = implode(', ', $hiveStatuses);
+        try {
+            foreach ($pushNotificationTokenRepository->getActiveAndEnabled() as $pushNotificationToken) {
+                $pushNotificationsService->sendInBulk(
+                    [['title' => $masterNode->getName() . ' setup', 'message' => $notification]],
+                    $pushNotificationToken->getToken()
+                );
+            }
+        } catch (\Exception $e) {
+        }
+
+        return new Response();
     }
 }
