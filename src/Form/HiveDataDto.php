@@ -11,7 +11,7 @@ use App\Repository\HiveRepository;
 
 /**
  * Parses following JSON into HiveData entities:
- * {"H1":{"w":12345,"t":37.5},"H2":{"w":23456,"t":40.1}}
+ * {"H0001":{"w":12345,"t":37.5},"H0002":{"w":23456,"t":40.1}}
  */
 final class HiveDataDto
 {

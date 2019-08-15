@@ -1,13 +1,13 @@
 INSERT INTO master_node
   (id, name, code, created_at, updated_at) 
 VALUES
-  (1, 'Master node 1', 'M1', NOW(), NOW());
+  (1, 'Master node 1', 'M0001', NOW(), NOW());
 
 INSERT INTO hive 
   (id, master_node_id, name, code, created_at, updated_at) 
 VALUES
-  (1, 1, 'Hive 1', 'H1', NOW(), NOW()),
-  (2, 1, 'Hive 2', 'H2', NOW(), NOW());
+  (1, 1, 'Hive 1', 'H0001', NOW(), NOW()),
+  (2, 1, 'Hive 2', 'H0002', NOW(), NOW());
 
 SET @start = NOW();
 INSERT INTO hive_data
