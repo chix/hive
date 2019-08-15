@@ -193,12 +193,14 @@ final class ApiController extends AbstractFOSRestController
             return $this->createNotFoundException();
         }
 
-        $hiveStatuses = [];
+        $hiveMeasurements = [];
         foreach ($masterNode->getHives() as $hive) {
-            $status = (!empty($json[$hive->getCode()])) ? 'on' : 'off';
-            $hiveStatuses[] = sprintf('%s: %s', $hive->getName(), $status);
+            $weight = (!empty($json[$hive->getCode()]) && !empty($json[$hive->getCode()]['w']))
+                ? intval($json[$hive->getCode()]['w'], 10) / 1000
+                : 0;
+            $hiveMeasurements[] = sprintf('%s: %.2fkg', $hive->getName(), $weight);
         }
-        $notification = implode(', ', $hiveStatuses);
+        $notification = implode(', ', $hiveMeasurements);
         try {
             foreach ($pushNotificationTokenRepository->getActiveAndEnabled() as $pushNotificationToken) {
                 $pushNotificationsService->sendInBulk(
