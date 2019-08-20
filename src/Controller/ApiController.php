@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\HiveData;
 use App\Form\HiveDataDto;
 use App\Form\PushNotificationTokenData;
 use App\Form\PushNotificationTokenType;
