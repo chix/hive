@@ -178,6 +178,7 @@ final class ApiController extends AbstractFOSRestController
      * @Annotations\Post("/nodes/{code}/setup-notification", requirements={"id"="[a-zA-Z0-9]+"})
      */
     public function postMasterNodeSetupSuccessfulAction(
+        EntityManagerInterface $entityManager,
         MasterNodeRepository $masterNodeRepository,
         PushNotificationTokenRepository $pushNotificationTokenRepository,
         PushNotificationsService $pushNotificationsService,
@@ -196,10 +197,16 @@ final class ApiController extends AbstractFOSRestController
         $hiveMeasurements = [];
         foreach ($masterNode->getHives() as $hive) {
             $weight = (!empty($json[$hive->getCode()]) && !empty($json[$hive->getCode()]['w']))
-                ? intval($json[$hive->getCode()]['w'], 10) / 1000
+                ? intval($json[$hive->getCode()]['w'], 10)
                 : 0;
-            $hiveMeasurements[] = sprintf('%s: %.2fkg', $hive->getName(), $weight);
+            $hiveMeasurements[] = sprintf('%s: %.2fkg', $hive->getName(), $weight / 1000);
+
+            $hiveData = new HiveData();
+            $hiveData->setHive($hive);
+            $hiveData->setWeight($weight);
+            $entityManager->persist($hiveData);
         }
+        $entityManager->flush();
         $notification = implode(', ', $hiveMeasurements);
         try {
             foreach ($pushNotificationTokenRepository->getActiveAndEnabled() as $pushNotificationToken) {
