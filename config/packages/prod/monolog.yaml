@@ -1,5 +1,5 @@
 monolog:
-    channels: ["crawler", "notifications"]
+    channels: ["errorReport", "notifications", ""]
     handlers:
         main:
             type: fingers_crossed
@@ -12,12 +12,12 @@ monolog:
             type: stream
             path: "%kernel.logs_dir%/%kernel.environment%.log"
             level: debug
-            channels: ['!crawler', '!notifications']
-        crawler:
+            channels: ['!errorReport', '!notifications']
+        errorReport:
             type: stream
             level: debug
-            path: '%kernel.logs_dir%/crawler_prod.log'
-            channels: ['crawler']
+            path: '%kernel.logs_dir%/error_report_prod.log'
+            channels: ['errorReport']
         notifications:
             type: stream
             level: debug

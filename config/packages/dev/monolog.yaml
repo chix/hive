@@ -1,11 +1,11 @@
 monolog:
-    channels: ["crawler", "notifications"]
+    channels: ["errorReport", "notifications"]
     handlers:
         main:
             type: stream
             path: "%kernel.logs_dir%/%kernel.environment%.log"
             level: debug
-            channels: ['!event', '!crawler', '!notifications']
+            channels: ['!event', '!errorReport', '!notifications']
         # uncomment to get logging in your browser
         # you may have to allow bigger header sizes in your Web server configuration
         #firephp:
@@ -14,11 +14,11 @@ monolog:
         #chromephp:
         #    type: chromephp
         #    level: info
-        crawler:
+        errorReport:
             type: stream
             level: debug
-            path: '%kernel.logs_dir%/crawler_dev.log'
-            channels: ['crawler']
+            path: '%kernel.logs_dir%/error_report_dev.log'
+            channels: ['errorReport']
         notifications:
             type: stream
             level: debug

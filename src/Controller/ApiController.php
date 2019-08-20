@@ -14,6 +14,7 @@ use App\Repository\MasterNodeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Service\PushNotificationsService;
@@ -217,6 +218,41 @@ final class ApiController extends AbstractFOSRestController
                 );
             }
         } catch (\Exception $e) {
+        }
+
+        return new Response();
+    }
+
+    /**
+     * @Annotations\Post("/nodes/{code}/error-report", requirements={"id"="[a-zA-Z0-9]+"})
+     */
+    public function postErrorReportAction(
+        EntityManagerInterface $entityManager,
+        LoggerInterface $errorReportLogger,
+        MasterNodeRepository $masterNodeRepository,
+        Request $request,
+        string $code
+    ) {
+        $masterNode = $masterNodeRepository->findOneByCode($code);
+        if ($masterNode === null) {
+            $errorReportLogger->warning($code . ' not found.');
+            return $this->createNotFoundException();
+        }
+
+        $errorReportLogger->warning((string)$request->getContent());
+
+        $json = json_decode((string)$request->getContent(), true);
+        if ($json !== null) {
+            foreach ($masterNode->getHives() as $hive) {
+                $weight = (!empty($json[$hive->getCode()]) && !empty($json[$hive->getCode()]['w']))
+                    ? intval($json[$hive->getCode()]['w'], 10)
+                    : 0;
+                $hiveData = new HiveData();
+                $hiveData->setHive($hive);
+                $hiveData->setWeight($weight);
+                $entityManager->persist($hiveData);
+            }
+            $entityManager->flush();
         }
 
         return new Response();
