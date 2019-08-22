@@ -47,6 +47,11 @@ final class PushNotificationsService
     ): string {
         $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
 
+        $this->logger->debug(count($notifications) . ' notifications to be sent');
+        if (empty($notifications)) {
+            return '';
+        }
+
         $data = [];
         $message = new \stdClass();
         $message->to = $token;
@@ -76,6 +81,11 @@ final class PushNotificationsService
         if ($response->getStatusCode() >= 400) {
             throw new \Exception($response->getContent(), $response->getStatusCode());
         }
+
+        foreach ($data as $notification) {
+            $this->logger->debug('Notification sent to ' . $token, json_decode(json_encode($notification), true));
+        }
+
         return $response->getContent();
     }
 
