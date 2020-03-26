@@ -78,21 +78,33 @@ final class ApiController extends AbstractFOSRestController
     }
 
     /**
-     * @Annotations\Post("/nodes/{code}/data", requirements={"id"="[a-zA-Z0-9]+"})
+     * @Annotations\Post("/nodes/{code}/data",
+     *   requirements={"code"="[a-zA-Z0-9]+"},
+     *   name="post_data"
+     * )
+     * @Annotations\Get("/nodes/{code}/data/{data}",
+     *   requirements={"code"="[a-zA-Z0-9]+","data"="[a-zA-Z0-9+/]+={0,2}"},
+     *   name="get_data"
+     * )
      */
     public function postHiveDataActions(
         EntityManagerInterface $entityManager,
         MasterNodeRepository $masterNodeRepository,
         Request $request,
         HiveDataDto $dto,
-        string $code
+        string $code,
+        ?string $data
     ) {
         $masterNode = $masterNodeRepository->findOneByCode($code);
         if ($masterNode === null) {
             return $this->createNotFoundException();
         }
 
-        $json = json_decode((string)$request->getContent(), true);
+        if ($data === null) {
+            $json = json_decode((string)$request->getContent(), true);
+        } else {
+            $json = json_decode((string)base64_decode($data), true);
+        }
 
         if ($json !== null) {
             $entities = $dto->createEntities($masterNode, $json);
@@ -155,7 +167,8 @@ final class ApiController extends AbstractFOSRestController
     }
 
     /**
-     * @Annotations\Post("/push-notification-token")
+     * @Annotations\Post("/push-notification-token", name="post_push_notification_token")
+     * @Annotations\Get("/push-notification-token", name="get_push_notification_token")
      */
     public function postPushNotificationTokenAction(
         Request $request,
@@ -163,7 +176,7 @@ final class ApiController extends AbstractFOSRestController
         PushNotificationTokenData $dto
     ) {
         $form = $this->createForm(PushNotificationTokenType::class, $dto);
-        $form->submit($request->request->all());
+        $form->submit(($request->getMethod() === 'POST' ? $request->request->all() : $request->query->all()));
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entity = $dto->createOrUpdateEntity($request->get('filters', []));
@@ -177,7 +190,14 @@ final class ApiController extends AbstractFOSRestController
     }
 
     /**
-     * @Annotations\Post("/nodes/{code}/setup-notification", requirements={"id"="[a-zA-Z0-9]+"})
+     * @Annotations\Post("/nodes/{code}/setup-notification",
+     *   requirements={"code"="[a-zA-Z0-9]+"},
+     *   name="post_setup_notification"
+     * )
+     * @Annotations\Get("/nodes/{code}/setup-notification/{data}",
+     *   requirements={"code"="[a-zA-Z0-9]+","data"="[a-zA-Z0-9+/]+={0,2}"},
+     *   name="get_setup_notification"
+     * )
      */
     public function postMasterNodeSetupSuccessfulAction(
         EntityManagerInterface $entityManager,
@@ -185,13 +205,18 @@ final class ApiController extends AbstractFOSRestController
         PushNotificationTokenRepository $pushNotificationTokenRepository,
         PushNotificationsService $pushNotificationsService,
         Request $request,
-        string $code
+        string $code,
+        ?string $data = null
     ) {
         $masterNode = $masterNodeRepository->findOneByCode($code);
         if ($masterNode === null) {
             return $this->createNotFoundException();
         }
-        $json = json_decode((string)$request->getContent(), true);
+        if ($data === null) {
+            $json = json_decode((string)$request->getContent(), true);
+        } else {
+            $json = json_decode((string)base64_decode($data), true);
+        }
         if ($json === null) {
             return $this->createNotFoundException();
         }
@@ -224,14 +249,22 @@ final class ApiController extends AbstractFOSRestController
     }
 
     /**
-     * @Annotations\Post("/nodes/{code}/error-report", requirements={"id"="[a-zA-Z0-9]+"})
+     * @Annotations\Post("/nodes/{code}/error-report",
+     *   requirements={"id"="[a-zA-Z0-9]+"},
+     *   name="post_error_report"
+     * )
+     * @Annotations\Get("/nodes/{code}/error-report/{data}",
+     *   requirements={"id"="[a-zA-Z0-9]+","data"="[a-zA-Z0-9+/]+={0,2}"},
+     *   name="get_error_report"
+     * )
      */
     public function postErrorReportAction(
         EntityManagerInterface $entityManager,
         LoggerInterface $errorReportLogger,
         MasterNodeRepository $masterNodeRepository,
         Request $request,
-        string $code
+        string $code,
+        ?string $data = null
     ) {
         $masterNode = $masterNodeRepository->findOneByCode($code);
         if ($masterNode === null) {
@@ -239,9 +272,14 @@ final class ApiController extends AbstractFOSRestController
             return $this->createNotFoundException();
         }
 
-        $errorReportLogger->warning((string)$request->getContent());
+        if ($data === null) {
+            $json = json_decode((string)$request->getContent(), true);
+        } else {
+            $json = json_decode((string)base64_decode($data), true);
+        }
 
-        $json = json_decode((string)$request->getContent(), true);
+        $errorReportLogger->warning((string)json_encode($json));
+
         if ($json !== null) {
             foreach ($masterNode->getHives() as $hive) {
                 $weight = (!empty($json[$hive->getCode()]) && !empty($json[$hive->getCode()]['w']))

@@ -83,7 +83,7 @@ final class PushNotificationsService
         }
 
         foreach ($data as $notification) {
-            $this->logger->debug('Notification sent to ' . $token, json_decode(json_encode($notification), true));
+            $this->logger->debug('Notification sent to ' . $token, json_decode((string)json_encode($notification), true));
         }
 
         return $response->getContent();
